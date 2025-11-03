@@ -1,3 +1,4 @@
+// intro.h
 #ifndef INTRO_H
 #define INTRO_H
 
@@ -55,10 +56,13 @@ private:
     float m_slope = 0.0f;
     float m_difficulty = 0.005f;
 
-    static constexpr int   PIXEL_SIZE = 6;
-    static constexpr int   SHADING_BLOCK = 3;
-    static constexpr int   STEP = 20;
-    static constexpr float DIFF_INC = 0.0001f;
+    static constexpr int   PIXEL_SIZE   = 6;
+    static constexpr int   SHADING_BLOCK= 3;
+    static constexpr int   STEP         = 20;
+    static constexpr float DIFF_INC     = 0.0001f;
+
+    // NEW: horizontal advance in glyph cells (was 6 before, now 7 for extra spacing)
+    static constexpr int   CHAR_ADV     = 7;
 
     int m_camX = 0;
     int m_camY = 200;
