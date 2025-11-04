@@ -209,15 +209,19 @@ void MainWindow::gameLoop() {
     for(CarBody* b : m_bodies) b->simulate(m_lines, accelDrive, brakeDrive);
 
     if (m_nitro) {
-        double dirX = m_nitroDirX;
-        double dirY = m_nitroDirY;
-        bool flippedHoriz = false;
+        double dirX = 1.0;
+        double dirY = 0.0;
         if (m_wheels.size() >= 2) {
             const Wheel* back  = m_wheels.first();
-            const Wheel* front = m_wheels.last();
-            flippedHoriz = (back->x > front->x);
+            const Wheel* front = m_wheels[1];
+            const double dx   = (front->x - back->x);
+            const double dyUp = (back->y  - front->y);
+            const double len  = std::sqrt(dx*dx + dyUp*dyUp);
+            if (len > 1e-6) {
+                dirX = dx   / len;
+                dirY = dyUp / len;
+            }
         }
-        if (flippedHoriz) dirX = -dirX;
 
         for (Wheel* w : m_wheels) {
             w->m_vx += NITRO_THRUST * dirX;
@@ -363,7 +367,6 @@ struct ActiveEdge {
     ActiveEdge(const EdgeEntry& e)
         : y_max(e.y_max), x_curr(e.x_at_min), inv_slope(e.inv_slope) {}
 
-    // Used to sort the AET by x-coordinate
     bool operator<(const ActiveEdge& other) const {
         return x_curr < other.x_curr;
     }
@@ -378,84 +381,66 @@ struct ActiveEdge {
 void MainWindow::fillPolygon(QPainter& p, QVector<QPoint> points, const QColor& c)
 {
     if (points.size() < 3) {
-        return; // Not a valid polygon
+        return;
     }
 
-    // 1. Build the Edge Table (ET)
-    //    Key: y_min (starting scan-line)
-    //    Value: List of edges that start at this y
     std::map<int, std::list<EdgeEntry>> edgeTable;
     int global_y_min = std::numeric_limits<int>::max();
     int global_y_max = std::numeric_limits<int>::min();
 
     for (int i = 0; i < points.size(); ++i) {
         const QPoint& p1 = points[i];
-        const QPoint& p2 = points[(i + 1) % points.size()]; // Wrap around
+        const QPoint& p2 = points[(i + 1) % points.size()];
 
-        // Update global y-bounds
         global_y_min = std::min({global_y_min, p1.y(), p2.y()});
         global_y_max = std::max({global_y_max, p1.y(), p2.y()});
 
-        // Ensure v1 is the lower-y point
         const QPoint *v1 = &p1, *v2 = &p2;
         if (v1->y() > v2->y()) {
             std::swap(v1, v2);
         }
 
-        // Ignore horizontal edges
         if (v1->y() == v2->y()) {
             continue;
         }
 
-        // Calculate inverse slope
         double invSlope = static_cast<double>(v2->x() - v1->x()) / (v2->y() - v1->y());
 
-        // Add edge to the edge table, indexed by its *minimum* y
         edgeTable[v1->y()].emplace_back(v2->y(), v1->x(), invSlope);
     }
 
-    // 2. Initialize Active Edge Table (AET)
     std::list<ActiveEdge> activeEdgeTable;
 
-    // 3. Scan and Fill
     for (int y = global_y_min; y < global_y_max; ++y) {
 
-        // 3a. Move edges from ET to AET
         if (edgeTable.count(y)) {
             for (const auto& edge : edgeTable[y]) {
                 activeEdgeTable.emplace_back(edge);
             }
         }
 
-        // 3b. Remove edges from AET that end at this scan-line
         activeEdgeTable.remove_if([y](const ActiveEdge& e) {
             return e.y_max == y;
         });
 
-        // 3c. Sort AET by current x-coordinate
         activeEdgeTable.sort();
 
-        // 3d. Fill spans between pairs of edges
         for (auto it = activeEdgeTable.begin(); it != activeEdgeTable.end(); it++) {
             auto it_next = std::next(it);
             if (it_next == activeEdgeTable.end()) {
-                break; // Should have an even number, but break just in case
+                break;
             }
 
-            // Get the start and end x for the span
-            // Use ceil/floor to handle fractional pixels correctly
             int x_start = static_cast<int>(std::ceil(it->x_curr));
             int x_end = static_cast<int>(std::floor(it_next->x_curr));
 
             for (int x = x_start; x <= x_end; ++x) {
-                // This is your custom plotting function
                 plotGridPixel(p, x, y, c);
             }
 
             ++it;
         }
 
-        // 3e. Update x_curr for all edges in AET for the *next* scan-line
         for (auto& edge : activeEdgeTable) {
             edge.x_curr += edge.inv_slope;
         }
@@ -508,8 +493,8 @@ void MainWindow::drawNitroFlame(QPainter& p) {
     if (!m_nitro) return;
     if (m_wheels.isEmpty()) return;
 
-    const Wheel* thruster = m_wheels.first();
-    auto info = thruster->get(0, 0, width(), height(), -m_cameraX, m_cameraY);
+    const Wheel* back = m_wheels.first();
+    auto info = back->get(0, 0, width(), height(), -m_cameraX, m_cameraY);
     if (!info) return;
 
     int cx = (*info)[0];
@@ -520,23 +505,50 @@ void MainWindow::drawNitroFlame(QPainter& p) {
     int gcy = cy / PIXEL_SIZE;
     int gr  = std::max(1, r / PIXEL_SIZE);
 
+    double dirX = 1.0;
+    double dirY = 0.0;
+    if (m_wheels.size() >= 2) {
+        const Wheel* front = m_wheels[1];
+        const double dx   = (front->x - back->x);
+        const double dyUp = (back->y  - front->y);
+        const double len  = std::sqrt(dx*dx + dyUp*dyUp);
+        if (len > 1e-6) {
+            dirX = dx   / len;
+            dirY = dyUp / len;
+        }
+    }
+
+    double nUpX = -dirY;
+    double nUpY =  dirX;
+
+    int nozzleGX = gcx + int(std::round(nUpX * (gr + 1)));
+    int nozzleGY = gcy - int(std::round(nUpY * (gr + 1)));
+
     QColor flameOuter(255,80,30);
     QColor flameMid  (255,140,40);
     QColor flameCore (255,230,90);
+    QColor nozzle    (60, 60, 70);
 
-    bool flippedHoriz = false;
-    if (m_wheels.size() >= 2) {
-        const Wheel* back  = m_wheels.first();
-        const Wheel* front = m_wheels.last();
-        flippedHoriz = (back->x > front->x);
-    }
-    int side = flippedHoriz ? +1 : -1;
+    plotGridPixel(p, nozzleGX, nozzleGY, nozzle);
 
-    for (int yy = -1; yy <= 1; ++yy) {
-        plotGridPixel(p, gcx + side*(gr+1), gcy+yy, flameMid);
-        plotGridPixel(p, gcx + side*(gr+2), gcy+yy, flameOuter);
+    double fx = nozzleGX;
+    double fy = nozzleGY;
+
+    double vx = -dirX;
+    double vy =  dirY;
+
+    int segments = 4;
+    for (int i = 1; i <= segments; ++i) {
+        int gx = int(std::round(fx + vx * i));
+        int gy = int(std::round(fy - vy * i));
+        if (i == segments) {
+            plotGridPixel(p, gx, gy, flameCore);
+        } else if (i == segments - 1) {
+            plotGridPixel(p, gx, gy, flameMid);
+        } else {
+            plotGridPixel(p, gx, gy, flameOuter);
+        }
     }
-    plotGridPixel(p, gcx + side*(gr+3), gcy, flameCore);
 }
 
 void MainWindow::drawGridOverlay(QPainter& p) {
