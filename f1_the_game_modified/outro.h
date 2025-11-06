@@ -1,3 +1,4 @@
+// outro.h
 #pragma once
 #include <QWidget>
 #include <QRect>
@@ -13,6 +14,8 @@ public:
     explicit OutroScreen(QWidget* parent = nullptr);
     void setStats(int coinCount, int nitroCount, int score, double distanceMeters);
 
+    void setFlips(int flips);
+
 signals:
     void exitRequested();
 
@@ -25,6 +28,8 @@ private:
     void centerInParent();
     void drawPixelCoin(QPainter& p, int gx, int gy, int rCells);
     void drawPixelFlame(QPainter& p, int gx, int gy, int lenCells);
+
+    int m_flips = 0;
 
 private:
     QPushButton* m_exitBtn = nullptr;

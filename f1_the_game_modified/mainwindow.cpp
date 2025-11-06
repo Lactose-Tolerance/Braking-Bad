@@ -155,6 +155,17 @@ void MainWindow::gameLoop() {
     updateCamera(targetX, targetY, dt);
     m_cameraX = int(std::lround(m_camX));
     m_cameraY = int(std::lround(m_camY));
+    double angleRad = 0.0;
+    if (m_wheels.size() >= 2) {
+        const double dx = (m_wheels[1]->x - m_wheels[0]->x);
+        const double dy = (m_wheels[1]->y - m_wheels[0]->y);
+        angleRad = std::atan2(dy, dx);
+    }
+    double carX = (!m_bodies.isEmpty()) ? m_bodies.first()->getX() : avgX;
+    double carY = (!m_bodies.isEmpty()) ? m_bodies.first()->getY() : avgY;
+
+    m_flip.update(angleRad, carX, carY, m_elapsedSeconds,
+                  [this](int bonus){ m_coinCount += bonus; });  // +50 per flip
 
     while (targetX > m_cameraXFarthest) {
         m_cameraXFarthest += m_step;
@@ -369,12 +380,14 @@ void MainWindow::paintEvent(QPaintEvent *event) {
             }
         }
     }
+    m_flip.drawWorldPopups(p, m_cameraX, m_cameraY);
 
     p.restore();
 
     drawHUDFuel(p);
     drawHUDCoins(p);
     m_nitroSys.drawHUD(p, m_elapsedSeconds);
+    m_flip.drawHUD(p);
     drawHUDDistance(p);
 }
 
@@ -778,6 +791,7 @@ void MainWindow::showGameOver() {
 
     m_outro = new OutroScreen(this);
     m_outro->setStats(m_coinCount, m_nitroUses, m_score, (m_totalDistanceCells * Constants::PIXEL_SIZE) / 100.0);
+    m_outro->setFlips(m_flip.total());
     m_outro->show();
     m_outro->raise();
 
@@ -917,6 +931,7 @@ void MainWindow::resetGameRound() {
 
     m_accelerating = m_braking = m_nitroKey = false;
     m_prevNitroActive = false;
+    m_flip.reset();
 
     m_clock.restart();
 }

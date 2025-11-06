@@ -16,7 +16,7 @@ struct Constants {
     static constexpr double DECELERATION    = 0.3;
     static constexpr double SPRING_CONSTANT = 0.6;
     static constexpr double DAMPING         = 0.06;
-    static constexpr double ROTATION        = 0.3;
+    static constexpr double ROTATION        = 0.5;
 
     // CAR
     static constexpr QColor CAR_COLOR = QColor(200, 50, 50);

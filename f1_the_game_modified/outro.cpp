@@ -1,3 +1,4 @@
+// outro.cpp
 #include "outro.h"
 #include "intro.h"
 #include "constants.h"
@@ -5,19 +6,64 @@
 #include <QPaintEvent>
 #include <QPushButton>
 #include <QMouseEvent>
+#include <QMap>
+#include <array>
+#include <initializer_list>
 #include <algorithm>
 
 namespace {
 
 constexpr int CHAR_ADV = 7;
 
-inline int textHeightCells(int scale){
-    return 7*scale;
-}
+inline int textHeightCells(int scale){ return 7*scale; }
 
 inline void plotGridPixel(QPainter& p, int cell, int gx, int gy, const QColor& c) {
     p.fillRect(gx*cell, gy*cell, cell, cell, c);
 }
+
+// ----- Minimal 5x7 bitmap font (uppercase, digits, :, . and space) -----
+static std::array<uint8_t,7> glyph(std::initializer_list<uint8_t> rows){
+    std::array<uint8_t,7> a{0,0,0,0,0,0,0};
+    int i=0; for(uint8_t r: rows){ if(i<7) a[i++]=r; }
+    return a;
+}
+static QMap<QChar, std::array<uint8_t,7>> make_font_map(){
+    QMap<QChar, std::array<uint8_t,7>> m;
+    // basics
+    m.insert(' ', glyph({0x00,0x00,0x00,0x00,0x00,0x00,0x00}));
+    m.insert(':', glyph({0x00,0x04,0x00,0x00,0x04,0x00,0x00}));
+    m.insert('.', glyph({0x00,0x00,0x00,0x00,0x00,0x00,0x04}));
+    // digits
+    m.insert('0', glyph({0x0E,0x11,0x19,0x15,0x13,0x11,0x0E}));
+    m.insert('1', glyph({0x04,0x0C,0x04,0x04,0x04,0x04,0x1F}));
+    m.insert('2', glyph({0x1E,0x01,0x01,0x0E,0x10,0x10,0x1F}));
+    m.insert('3', glyph({0x1E,0x01,0x01,0x0E,0x01,0x01,0x1E}));
+    m.insert('4', glyph({0x02,0x06,0x0A,0x12,0x1F,0x02,0x02}));
+    m.insert('5', glyph({0x1F,0x10,0x10,0x1E,0x01,0x01,0x1E}));
+    m.insert('6', glyph({0x0E,0x10,0x10,0x1E,0x11,0x11,0x0E}));
+    m.insert('7', glyph({0x1F,0x01,0x02,0x04,0x08,0x08,0x08}));
+    m.insert('8', glyph({0x0E,0x11,0x11,0x0E,0x11,0x11,0x0E}));
+    m.insert('9', glyph({0x0E,0x11,0x11,0x0F,0x01,0x01,0x0E}));
+    // letters used in the panel texts
+    m.insert('A', glyph({0x0E,0x11,0x11,0x1F,0x11,0x11,0x11}));
+    m.insert('C', glyph({0x0E,0x11,0x10,0x10,0x10,0x11,0x0E}));
+    m.insert('D', glyph({0x1E,0x11,0x11,0x11,0x11,0x11,0x1E}));
+    m.insert('E', glyph({0x1F,0x10,0x1E,0x10,0x10,0x10,0x1F}));
+    m.insert('F', glyph({0x1F,0x10,0x1E,0x10,0x10,0x10,0x10}));
+    m.insert('G', glyph({0x0E,0x11,0x10,0x17,0x11,0x11,0x0E}));
+    m.insert('I', glyph({0x0E,0x04,0x04,0x04,0x04,0x04,0x0E}));
+    m.insert('L', glyph({0x10,0x10,0x10,0x10,0x10,0x10,0x1F}));
+    m.insert('M', glyph({0x11,0x1B,0x15,0x11,0x11,0x11,0x11}));
+    m.insert('O', glyph({0x0E,0x11,0x11,0x11,0x11,0x11,0x0E}));
+    m.insert('P', glyph({0x1E,0x11,0x11,0x1E,0x10,0x10,0x10}));
+    m.insert('R', glyph({0x1E,0x11,0x11,0x1E,0x12,0x11,0x11}));
+    m.insert('S', glyph({0x0F,0x10,0x10,0x0E,0x01,0x01,0x1E}));
+    m.insert('T', glyph({0x1F,0x04,0x04,0x04,0x04,0x04,0x04}));
+    m.insert('V', glyph({0x11,0x11,0x11,0x11,0x11,0x0A,0x04}));
+    m.insert('X', glyph({0x11,0x11,0x0A,0x04,0x0A,0x11,0x11}));
+    return m;
+}
+static const QMap<QChar, std::array<uint8_t,7>> font_map = make_font_map();
 
 inline int textWidthCells(const QString& s, int scale){
     return s.isEmpty()?0:((int)s.size()-1)*CHAR_ADV*scale + 5*scale;
@@ -55,7 +101,7 @@ void drawPixelText(QPainter& p, const QString& s, int cell, int gx, int gy, int 
         }
     }
 }
-}
+} // anonymous namespace
 
 OutroScreen::OutroScreen(QWidget* parent)
     : QWidget(parent)
@@ -71,10 +117,11 @@ OutroScreen::OutroScreen(QWidget* parent)
     connect(m_exitBtn,&QPushButton::clicked,this,[this]{ emit exitRequested(); });
     m_exitBtn->hide();
 
+    // Larger panel
     if(parent){
-        int w=int(parent->width()*0.5);
-        int h=int(parent->height()*0.42);
-        resize(w,h);
+        int w = int(parent->width()  * 0.60);
+        int h = int(parent->height() * 0.50);
+        resize(w, h);
         centerInParent();
     }
     m_cell=std::max(4,std::min(width(),height())/90);
@@ -95,7 +142,6 @@ void OutroScreen::setStats(int coinCount, int nitroCount, int score, double dist
     m_distanceM = distanceMeters;
     update();
 }
-
 
 void OutroScreen::paintEvent(QPaintEvent*){
     QPainter p(this);
@@ -132,63 +178,66 @@ void OutroScreen::paintEvent(QPaintEvent*){
     const int rowGap = std::max(10, gh/24);
 
     const int contentTop = tGY + titleH + topGap;
-    const int contentBottomReserve = std::max(10, gh/8);
 
+    // Left column (coins / nitro)
     int iconR = std::clamp(gw/50, 2, 5);
     int gapL  = std::max(8, gw/40);
-
     int leftGX = GX(std::max(6, gw/12));
-    int row1Y  = contentTop;
-    int row2Y  = row1Y + std::max(textHeightCells(std::max(1,titleScale/2)), iconR*2+2) + rowGap;
 
-    const int rightExtraGap = std::max(6, gh/40);
-
-    int rightPadCells = std::clamp(gw/10, 12, 30);
-
+    // Right column strings
     QString scoreStr = QString("SCORE: %1").arg(m_score);
-    QString distStr = QString("DIST: %1 m").arg(QString::number(m_distanceM,'f',1));
+    QString distStr  = QString("DIST: %1 m").arg(QString::number(m_distanceM,'f',1));
+    QString flipsStr = QString("FLIPS: x%1").arg(m_flips);
 
-    int numScale = std::max(1, titleScale/2);
-    int rightScale = std::max(1, titleScale/2);
+    int numScale    = std::max(1, titleScale/2);
+    int rightScale  = std::max(1, titleScale/2);
 
     auto leftEndGX = [&](const QString& s, int baseGX){
         return baseGX + gapL + textWidthCells(s, numScale);
     };
     auto rightStartGX = [&](const QString& s){
+        int rightPadCells = std::clamp(gw/10, 12, 30);
         int w = textWidthCells(s, rightScale);
         return GX(gw - rightPadCells - w);
     };
 
-    QString coinsStr = QString("x%1").arg(m_coins);
-    QString nitroStr = QString("x%1").arg(m_nitros);
+    // Equal vertical spacing for the three right rows (score, dist, flips)
+    const int rightRowH = textHeightCells(rightScale);
+    const int row1Y = contentTop;
+    const int row2Y = row1Y + rightRowH + rowGap;
+    const int row3Y = row2Y + rightRowH + rowGap;
 
+    // Ensure left rows don't collide with right rows; shrink scales if necessary
     int iter=12;
     while (iter--){
         int sGX = rightStartGX(scoreStr);
         int dGX = rightStartGX(distStr);
-        int l1End = leftEndGX(coinsStr, leftGX + iconR);
-        int l2End = leftEndGX(nitroStr, leftGX + iconR);
-
-        bool overlap = (l1End + 2 >= sGX) || (l2End + 2 >= dGX);
+        int fGX = rightStartGX(flipsStr);
+        int l1End = leftEndGX(QString("x%1").arg(m_coins), leftGX + iconR);
+        int l2End = leftEndGX(QString("x%1").arg(m_nitros), leftGX + iconR);
+        bool overlap = (l1End + 2 >= sGX) || (l2End + 2 >= dGX) || (l2End + 2 >= fGX);
         if (!overlap) break;
         if (rightScale > 1) --rightScale;
-        if (numScale > 1) --numScale;
+        if (numScale   > 1) --numScale;
     }
 
+    // Left column draw
     drawPixelCoin(p,leftGX,row1Y+3,iconR);
-    drawPixelText(p,coinsStr,cell,leftGX+iconR+gapL,row1Y,numScale,QColor(230,230,240),false);
+    drawPixelText(p,QString("x%1").arg(m_coins),cell,leftGX+iconR+std::max(8, gw/40),row1Y,numScale,QColor(230,230,240),false);
 
     drawPixelFlame(p,leftGX,row2Y+3,iconR*2);
-    drawPixelText(p,nitroStr,cell,leftGX+iconR+gapL,row2Y,numScale,QColor(230,230,240),false);
+    drawPixelText(p,QString("x%1").arg(m_nitros),cell,leftGX+iconR+std::max(8, gw/40),row2Y,numScale,QColor(230,230,240),false);
 
-    int sGX = rightStartGX(scoreStr);
-    int dGX = rightStartGX(distStr);
-    drawPixelText(p, scoreStr, cell, sGX, row1Y, rightScale, QColor(230,230,240), false);
-    drawPixelText(p, distStr,  cell, dGX, row2Y + rightExtraGap, rightScale, QColor(230,230,240), false);
+    // Right column draw — now evenly spaced
+    drawPixelText(p, scoreStr, cell, rightStartGX(scoreStr), row1Y, rightScale, QColor(230,230,240), false);
+    drawPixelText(p, distStr,  cell, rightStartGX(distStr),  row2Y, rightScale, QColor(230,230,240), false);
+    drawPixelText(p, flipsStr, cell, rightStartGX(flipsStr), row3Y, rightScale, QColor(230,230,240), false);
 
-    int btnWCells = std::min(std::max(int(gw/6.5), 24), gw - 12);
+    // Exit button
+    const int gwBtn = gw;
+    int btnWCells = std::min(std::max(int(gwBtn/6.5), 24), gwBtn - 12);
     int btnHCells = std::max(9, gh/10);
-    int bGX = GX((gw - btnWCells)/2);
+    int bGX = GX((gwBtn - btnWCells)/2);
     int bGY = GY(gh - btnHCells - std::max(3, gh/40));
     QRect rExit(bGX*cell, bGY*cell, btnWCells*cell, btnHCells*cell);
     m_btnExitRect = rExit;
@@ -208,7 +257,6 @@ void OutroScreen::paintEvent(QPaintEvent*){
     const int tyGY=bGY+(btnHCells-7*bs)/2;
     drawPixelText(p,sExit,cell,txGX,tyGY,bs,QColor(255,255,255),false);
 }
-
 
 void OutroScreen::resizeEvent(QResizeEvent*){
     m_cell=std::max(4,std::min(width(),height())/90);
@@ -240,12 +288,8 @@ void OutroScreen::drawPixelCoin(QPainter& p, int gx, int gy, int rCells){
         span(y0+x,x0-y,x0+y,c1);
         span(y0-x,x0-y,x0+y,c1);
         ++x;
-        if(d<0)
-            d+=2*x+1;
-        else {
-            --y;
-            d+=2*(x-y)+1;
-        }
+        if(d<0) d+=2*x+1;
+        else { --y; d+=2*(x-y)+1; }
     }
 
     for(int yy=-r+1; yy<=r-1; ++yy){
@@ -267,14 +311,16 @@ void OutroScreen::drawPixelFlame(QPainter& p, int gx, int gy, int lenCells){
         int cx=x0-i, cy=y0;
 
         int w=std::max(0,2-i/2);
-        for(int j=-w;j<=w;++j)
-            plot(cx,cy+j,cOuter);
+        for(int j=-w;j<=w;++j) plot(cx,cy+j,cOuter);
 
         int w2=std::max(0,w-1);
-        for(int j=-w2;j<=w2;++j)
-            plot(cx,cy+j,cMid);
+        for(int j=-w2;j<=w2;++j) plot(cx,cy+j,cMid);
 
-        if(w2>=0)
-            plot(cx,cy,cCore);
+        if(w2>=0) plot(cx,cy,cCore);
     }
+}
+
+void OutroScreen::setFlips(int flips) {
+    m_flips = std::max(0, flips);
+    update();
 }

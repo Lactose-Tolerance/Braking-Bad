@@ -20,6 +20,7 @@
 #include "coin.h"
 #include "fuel.h"
 #include "nitro.h"
+#include "flip.h"
 
 class QKeyEvent;
 class QPainter;
@@ -160,6 +161,8 @@ private:
     int m_score = 0;
 
     int m_grandTotalCoins = 0;
+
+    FlipTracker m_flip;
 };
 
 #endif
