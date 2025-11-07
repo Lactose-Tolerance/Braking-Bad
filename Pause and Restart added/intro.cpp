@@ -236,7 +236,7 @@ void IntroScreen::paintEvent(QPaintEvent*) {
     int labelGY = iconGY - (7*scale)/3;
     drawPixelText(p, total, labelGX, labelGY, (double)scale, Constants::TEXT_COLOR[level_index], false);
 
-    const QString title = "Need 4 Speed";
+    const QString title = "D.U.I.";
     int ts = titleScale();
     int titleWCells = textWidthCells(title, ts);
     int tgx = (gridW() - titleWCells) / 2;
