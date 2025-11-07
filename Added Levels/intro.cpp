@@ -231,14 +231,14 @@ void IntroScreen::paintEvent(QPaintEvent*) {
     QString total = QString("%1").arg(m_grandCoins);
     int labelGX = iconGX + r*2 + 2;
     int labelGY = iconGY - (7*scale)/3;
-    drawPixelText(p, total, labelGX, labelGY, (double)scale, QColor(20,24,28), false);
+    drawPixelText(p, total, labelGX, labelGY, (double)scale, Constants::INTRO_TEXT_COLOR[level_index], false);
 
     const QString title = "D.U.I.";
     int ts = titleScale();
     int titleWCells = textWidthCells(title, ts);
     int tgx = (gridW() - titleWCells) / 2;
     int tgy = titleYCells();
-    drawPixelText(p, title, tgx, tgy, ts, Constants::INTRO_TEXT_COLOR, true);
+    drawPixelText(p, title, tgx, tgy, ts, Constants::INTRO_TEXT_COLOR[level_index], true);
 
     // --- Level selector ---
     QRect rLevelPrev = buttonRectLevelPrev();
@@ -279,7 +279,7 @@ void IntroScreen::paintEvent(QPaintEvent*) {
                   + (rLevelPrev.height()/PIXEL_SIZE - 7*levelScale)/2
                   + stageGapCells;
 
-    drawPixelText(p, levelName, levelGX, levelGY, levelScale, Constants::INTRO_TEXT_COLOR, true);
+    drawPixelText(p, levelName, levelGX, levelGY, levelScale, Constants::INTRO_TEXT_COLOR[level_index], true);
     // --- End selector ---
 
     // Buttons (now anchored 5px below stage label)
@@ -316,8 +316,8 @@ void IntroScreen::paintEvent(QPaintEvent*) {
     int eGX = rExit.left()/PIXEL_SIZE  + (rExitWc  - eWCells)/2;
     int eGY = rExit.top()/PIXEL_SIZE   + (rExitHc  - 7*bsExit)/2;
 
-    drawPixelText(p, sStart, sGX, sGY, bsStart, QColor(25,20,24), false);
-    drawPixelText(p, sExit,  eGX, eGY,  bsExit,  QColor(25,20,24), false);
+    drawPixelText(p, sStart, sGX, sGY, bsStart,  QColor(20,20,20), false);
+    drawPixelText(p, sExit,  eGX, eGY,  bsExit,  QColor(20,20,20), false);
 }
 
 void IntroScreen::mousePressEvent(QMouseEvent* e) {
