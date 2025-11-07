@@ -945,6 +945,9 @@ void MainWindow::showGameOver() {
             m_outro->deleteLater();
             m_outro = nullptr;
         }
+
+        m_grandTotalCoins +=m_coinCount;
+        saveGrandCoins();
         resetGameRound();
         m_pause->hide();
         m_roofCrashLatched = false;

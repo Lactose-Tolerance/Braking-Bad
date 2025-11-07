@@ -236,7 +236,7 @@ void IntroScreen::paintEvent(QPaintEvent*) {
     int labelGY = iconGY - (7*scale)/3;
     drawPixelText(p, total, labelGX, labelGY, (double)scale, Constants::TEXT_COLOR[level_index], false);
 
-    const QString title = "D.U.I.";
+    const QString title = "Need 4 Speed";
     int ts = titleScale();
     int titleWCells = textWidthCells(title, ts);
     int tgx = (gridW() - titleWCells) / 2;
@@ -291,10 +291,8 @@ void IntroScreen::paintEvent(QPaintEvent*) {
 
     p.setPen(Qt::NoPen);
 
-    if (levels_unlocked.value(level_index, true))
+    if (levels_unlocked[level_index])
     {
-        // --- THIS IS YOUR EXISTING "PLAY" BUTTON CODE ---
-        // (Draws the yellow "PLAY" button)
         rStart = buttonRectStart();
         p.setBrush(QColor(0,0,0,160));
         p.drawRect(rStart.translated(3*PIXEL_SIZE,3*PIXEL_SIZE));
@@ -312,9 +310,6 @@ void IntroScreen::paintEvent(QPaintEvent*) {
     }
     else
     {
-        // --- THIS IS THE NEW "LOCKED" BUTTON CODE ---
-        // (Draws a gray "UNLOCK" button)
-
         rStart = buttonRectUnlock();
 
         int cost = m_levelCosts.value(level_index, 999);
@@ -381,7 +376,11 @@ void IntroScreen::mousePressEvent(QMouseEvent* e) {
         update();
         return;
     }
-    if (buttonRectStart().contains(e->pos())) {emit startRequested(level_index); return;}
+
+    if (buttonRectStart().contains(e->pos()) && levels_unlocked[level_index]) {
+        emit startRequested(level_index);
+        return;
+    }
 
     if (buttonRectUnlock().contains(e->pos())){
         int cost = m_levelCosts.value(level_index, 0);
