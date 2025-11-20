@@ -8,21 +8,21 @@
 
 struct Constants {
     // LEVEL MECHANICS
-    inline static QVector<double> GRAVITY           = {0.08, 0.08, 0.08, 0.04, 0.06};
-    inline static QVector<double> AIR_RESISTANCE    = {0.0005, 0.0003, 0.0007, 0.00001, 0.00005};
-    inline static QVector<double> RESTITUTION       = {0.8, 0.5, 0.8, 0.7, 0.07};
-    inline static QVector<double> FRICTION          = {0.003, 0.03, 0.0001, 0.001, 0.03};
-    inline static QVector<double> TRACTION          = {1, 1.25, 0.5, 0.5, 0.75};
-    inline static QVector<double> CLOUD_PROBABILITY = {0.5, 0.1, 0.7, 0, 0.05};
-    inline static QVector<QColor> SKY_COLOR = {QColor(150,210,255), QColor(255,220,200), QColor(210,210,255), QColor(0,0,0), QColor(200, 150, 150)};
-    inline static QVector<QColor> CLOUD_COLOR = {QColor(255,255,255), QColor(255,255,200), QColor(255,255,255), QColor(0,0,0), QColor(255, 220, 200)};
-    inline static QVector<double> MAX_SLOPE = {1.0, 1.5, 0.8, 2, 1.5};
-    inline static QVector<double> INITIAL_DIFFICULTY = {0.005, 0.005, 0.008, 0.01, 0.008};
-    inline static QVector<double> DIFFICULTY_INCREMENT = {0.0001, 0.0002, 0.0001, 0.0003, 0.0002};
-    inline static QVector<double> INITIAL_IRREGULARITY = {0.01, 0.001, 0.01, 0.05, 0.02};
-    inline static QVector<double> IRREGULARITY_INCREMENT = {0.00001, 0.000001, 0.00003, 0.0001, 0.00005};
-    inline static QVector<double> INITIAL_TERRAIN_HEIGHT = {10, 10, 10, 20, 10};
-    inline static QVector<double> TERRAIN_HEIGHT_INCREMENT = {0.001, 0.002, 0.001, 0.002, 0.002};
+    inline static QVector<double> GRAVITY           = {0.08, 0.08, 0.08, 0.04, 0.06, 0.08};
+    inline static QVector<double> AIR_RESISTANCE    = {0.0005, 0.0003, 0.0007, 0.00001, 0.00005, 0.0007};
+    inline static QVector<double> RESTITUTION       = {0.8, 0.5, 0.8, 0.7, 0.07, 0.5};
+    inline static QVector<double> FRICTION          = {0.003, 0.03, 0.0001, 0.001, 0.03, 0.03};
+    inline static QVector<double> TRACTION          = {1, 1.25, 0.5, 0.5, 0.75, 1.5};
+    inline static QVector<double> CLOUD_PROBABILITY = {0.5, 0.1, 0.7, 0, 0.05, 0.7};
+    inline static QVector<QColor> SKY_COLOR = {QColor(150,210,255), QColor(255,220,200), QColor(210,210,255), QColor(0,0,0), QColor(200, 150, 150), QColor(30, 30, 40)};
+    inline static QVector<QColor> CLOUD_COLOR = {QColor(255,255,255), QColor(255,255,200), QColor(255,255,255), QColor(0,0,0), QColor(255, 220, 200), QColor(50, 50, 25)};
+    inline static QVector<double> MAX_SLOPE = {1.0, 1.5, 0.8, 2, 1.5, 0.5};
+    inline static QVector<double> INITIAL_DIFFICULTY = {0.005, 0.005, 0.008, 0.01, 0.008, 0.001};
+    inline static QVector<double> DIFFICULTY_INCREMENT = {0.0001, 0.0002, 0.0001, 0.0003, 0.0002, 0.0001};
+    inline static QVector<double> INITIAL_IRREGULARITY = {0.01, 0.001, 0.01, 0.05, 0.02, 0.05};
+    inline static QVector<double> IRREGULARITY_INCREMENT = {0.00001, 0.000001, 0.00003, 0.0001, 0.00005, 0.0001};
+    inline static QVector<double> INITIAL_TERRAIN_HEIGHT = {10, 10, 10, 20, 10, 5};
+    inline static QVector<double> TERRAIN_HEIGHT_INCREMENT = {0.001, 0.002, 0.001, 0.002, 0.002, 0.0005};
     static constexpr int STEP = 20;
 
     //CAR MECHANICS
@@ -100,10 +100,9 @@ struct Constants {
     static constexpr int SCORE_PER_NITRO = 25;
 
 
-    // TEXT COLORS
+    // === TEXT COLORS
     static constexpr QColor INTRO_COIN_COLOR = QColor(254, 194, 12);
-    inline static QVector<QColor> TEXT_COLOR = {QColor(20,20,20), QColor(20,20,20), QColor(20,20,20), QColor(200,200,200), QColor(20,20,20)};
-    inline static QVector<QColor> FLIP_COLOR = {QColor(0,0,0), QColor(0,0,0), QColor(0,0,0), QColor(237,181,37), QColor(0,0,0)};
+    inline static QVector<QColor> TEXT_COLOR = {QColor(20,20,20), QColor(20,20,20), QColor(20,20,20), QColor(200,200,200), QColor(20,20,20), QColor(200, 200, 200)};
 };
 
 
@@ -113,10 +112,11 @@ static QVector<QString> m_levelNames = {
     "DESERT",
     "TUNDRA",
     "LUNAR",
-    "MARTIAN"
+    "MARTIAN",
+    "NIGHTLIFE"
 };
 
-static QVector<int>  m_levelCosts = {0, 300, 600, 1000, 1500};
+static QVector<int>  m_levelCosts = {0, 300, 600, 1000, 1500, 2500};
 
 // palettes
 inline const QVector<QVector<QColor>> m_grassPalette = {
@@ -143,7 +143,12 @@ inline const QVector<QVector<QColor>> m_grassPalette = {
     {QColor(190,100, 50), QColor(220,120, 70), QColor(240,150, 90),
      QColor(150, 80, 40), QColor(190,100, 50), QColor(220,120, 70),
      QColor(240,150, 90), QColor(220,120, 70), QColor(240,150, 90),
-     QColor(150, 80, 40)}
+     QColor(150, 80, 40)},
+
+    {QColor(65, 65, 70), QColor(85, 85, 90), QColor(105,105,110),
+      QColor(45, 45, 50), QColor(65, 65, 70), QColor(85, 85, 90),
+      QColor(105,105,110), QColor(85, 85, 90), QColor(105,105,110),
+      QColor(45, 45, 50)}
 };
 
 inline const QVector<QVector<QColor>> m_dirtPalette = {
@@ -170,7 +175,12 @@ inline const QVector<QVector<QColor>> m_dirtPalette = {
     {QColor(100, 70, 65), QColor(120, 90, 85), QColor(135,105,100),
      QColor(80, 50, 45),  QColor(100, 70, 65), QColor(120, 90, 85),
      QColor(135,105,100), QColor(120, 90, 85), QColor(135,105,100),
-     QColor(80, 50, 45)}
+     QColor(80, 50, 45)},
+
+    {QColor(45, 40, 35), QColor(60, 55, 50), QColor(75, 70, 65),
+     QColor(30, 25, 20), QColor(45, 40, 35), QColor(60, 55, 50),
+     QColor(75, 70, 65), QColor(60, 55, 50), QColor(75, 70, 65),
+     QColor(30, 25, 20)}
 };
 
 // font mapping
