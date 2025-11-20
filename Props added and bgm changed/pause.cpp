@@ -75,7 +75,9 @@ void PauseOverlay::mousePressEvent(QMouseEvent* e) {
     }
 }
 
-void PauseOverlay::resizeEvent(QResizeEvent*) { update(); }
+void PauseOverlay::resizeEvent(QResizeEvent*) {
+    update();
+}
 
 int PauseOverlay::textWidthCells(const QString& s, int scale) const {
     if (s.isEmpty()) return 0;
@@ -95,10 +97,10 @@ void PauseOverlay::drawPixelText(QPainter& p, const QString& s, int gx, int gy, 
                     for (int sy=0; sy<scale; ++sy) {
                         for (int sx=0; sx<scale; ++sx) {
                             if (bold) {
-                                plot(baseOff + rx*scale+sx-1, ry*scale+sy, QColor(20,20,22));
-                                plot(baseOff + rx*scale+sx+1, ry*scale+sy, QColor(20,20,22));
-                                plot(baseOff + rx*scale+sx, ry*scale+sy-1, QColor(20,20,22));
-                                plot(baseOff + rx*scale+sx, ry*scale+sy+1, QColor(20,20,22));
+                                plot(baseOff + rx*scale+sx-1, ry*scale+sy, c);
+                                plot(baseOff + rx*scale+sx+1, ry*scale+sy, c);
+                                plot(baseOff + rx*scale+sx, ry*scale+sy-1, c);
+                                plot(baseOff + rx*scale+sx, ry*scale+sy+1, c);
                             }
                             plot(baseOff + rx*scale+sx, ry*scale+sy, c);
                         }

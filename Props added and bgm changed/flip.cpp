@@ -88,15 +88,14 @@ void FlipTracker::drawPixelWordFlip(QPainter& p, int gx, int gy, int cell, const
     drawChar(ex,adv*4);
 }
 
-void FlipTracker::drawWorldPopups(QPainter& p, int cameraX, int cameraY) const
+void FlipTracker::drawWorldPopups(QPainter& p, int cameraX, int cameraY, int level_index) const
 {
     const int cell = Constants::PIXEL_SIZE;
-    const QColor c(255, 240, 90);
-    const int screenPadCells = 10; // keep farther from left edge
+    const int screenPadCells = 10;
 
     for (const auto& pop : m_popups) {
         const int gx = gx_from_px(pop.wx - cameraX) + screenPadCells;
         const int gy = gy_from_px(pop.wy + cameraY);
-        drawPixelWordFlip(p, gx, gy, cell, c);
+        drawPixelWordFlip(p, gx, gy, cell, Constants::FLIP_COLOR[level_index]);
     }
 }

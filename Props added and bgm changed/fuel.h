@@ -22,15 +22,9 @@ public:
 
     int currentFuelSpacing(double difficulty, double elapsedSeconds) const;
 
-    void maybePlaceFuelAtEdge(
-        int lastTerrainX,
-        const QHash<int,int>& heightAtGX,
-        double difficulty,
-        double elapsedSeconds
-        );
+    void maybePlaceFuelAtEdge(int lastTerrainX, const QHash<int,int>& heightAtGX, double difficulty, double elapsedSeconds);
 
     void drawWorldFuel(QPainter& p, int cameraX, int cameraY) const;
-
     void handlePickups(const QList<Wheel*>& wheels, double& fuel);
 };
 
