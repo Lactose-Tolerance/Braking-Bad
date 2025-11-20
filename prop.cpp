@@ -120,12 +120,12 @@ void PropSystem::maybeSpawnProp(int worldX, int groundGy, int levelIndex, float 
     }
     else if (levelIndex == 5) {
         // NIGHTLIFE
-        if (chance < 0.95f) {
+        if (chance < 0.5f) {
             m_props.append({worldX, wy, PropType::Building, varDist(rng), false});
         }
 
         float lampChance = dist(rng);
-        if (lampChance < 0.15f) {
+        if (lampChance < 0.1f) {
             m_props.append({worldX + 15, wy, PropType::StreetLamp, varDist(rng), false});
         }
     }
@@ -190,13 +190,13 @@ void PropSystem::drawBuilding(QPainter& p, int gx, int gy, int worldGX, int vari
         QColor(0, 255, 64),  QColor(255, 220, 0), QColor(255, 80, 0),
         QColor(50, 100, 255)
     };
-    QColor neon = neons[variant % neons.size()];
+    QColor neon = neons[(variant + worldGX) % neons.size()];
 
     int h = 30 + (variant * 4);
     int w = 32 + (variant % 3) * 8;
 
-    if (variant == 5) { w = 48; h = 25; }
-    if (variant == 3) { w = 36; h = 35; }
+    if (variant == 5) { w = 25; h = 80; }
+    if (variant == 3) { w = 36; h = 100; }
 
     int leftRel = -w/2;
     int rightRel = w/2;
@@ -259,10 +259,10 @@ void PropSystem::drawBuilding(QPainter& p, int gx, int gy, int worldGX, int vari
     }
 
     // Antennas (Static)
-    if (variant < 3) {
-        plot(p, gx, topScreenY - 1, bFrame);
-        plot(p, gx, topScreenY - 2, bFrame);
-        plot(p, gx, topScreenY - 3, bFrame); // Just a dark tip, no light
+    if (variant == 3 || variant == 5) {
+        for(int i=1; i<=10; i++){
+            plot(p, gx, topScreenY - i, bFrame);
+        }
     }
 }
 
