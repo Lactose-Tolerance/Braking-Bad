@@ -302,7 +302,7 @@ void MainWindow::paintEvent(QPaintEvent *event) {
     if (m_showGrid) { drawGridOverlay(p); }
     drawClouds(p);
     drawFilledTerrain(p);
-    m_propSys.draw(p, m_cameraX, m_cameraY, width(), height());
+    m_propSys.draw(p, m_cameraX, m_cameraY, width(), height(), m_heightAtGX);
     m_fuelSys.drawWorldFuel(p, m_cameraX, m_cameraY);
     m_coinSys.drawWorldCoins(p, m_cameraX, m_cameraY, gridW(), gridH());
     m_nitroSys.drawFlame(p, m_wheels, m_cameraX, m_cameraY, width(), height());
