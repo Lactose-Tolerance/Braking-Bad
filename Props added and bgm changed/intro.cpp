@@ -12,10 +12,10 @@ constexpr int TITLE_STAGE_GAP_PX = 30;
 IntroScreen::IntroScreen(QWidget* parent, int levelIndex) : QWidget(parent) {
     setAttribute(Qt::WA_OpaquePaintEvent);
 
-    levels_unlocked = {true, true, true, true, true};
-    saveUnlocks();
-
     level_index = levelIndex;
+
+    loadGrandCoins();
+    loadUnlocks();
 
     connect(&m_timer, &QTimer::timeout, this, [this]{
         m_scrollX += 2.0;
@@ -45,9 +45,6 @@ IntroScreen::IntroScreen(QWidget* parent, int levelIndex) : QWidget(parent) {
             m_difficulty += DIFF_INC;
             maybeSpawnCloud();
         }
-
-        loadGrandCoins();
-        loadUnlocks();
 
         update();
     });
@@ -671,12 +668,14 @@ void IntroScreen::loadUnlocks() {
             levels_unlocked.append(item.toBool());
         }
 
-        if (levels_unlocked.size() != m_levelCosts.size()) {
-            levels_unlocked = {true, false, false, false, false};
+        while(levels_unlocked.size() != m_levelCosts.size()) {
+            levels_unlocked.append(false);
         }
+
+        saveUnlocks();
     }
     else
     {
-        levels_unlocked = {true, false, false, false, false};
+        levels_unlocked = {true, false, false, false, false, false};
     }
 }
