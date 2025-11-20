@@ -101,8 +101,8 @@ void MainWindow::generateInitialTerrain() {
         m_lines.append(seg);
         rasterizeSegmentToHeightMapWorld(seg.getX1(), m_lastY, seg.getX2(), newY);
         int midX = seg.getX1();
-        int groundGy = groundGyNearestGX(midX / Constants::PIXEL_SIZE);
-        m_propSys.maybeSpawnProp(midX, groundGy, level_index, m_rng);
+        int groundGy = groundGyNearestGX(midX / Constants::PIXEL_SIZE); 
+        m_propSys.maybeSpawnProp(currentWorldX, groundGy, level_index, m_slope, m_rng);
 
         m_lastY = newY;
         m_difficulty += Constants::DIFFICULTY_INCREMENT[level_index];
@@ -578,7 +578,7 @@ void MainWindow::ensureAheadTerrain(int worldX) {
         
         int gx = currentWorldX / Constants::PIXEL_SIZE;
         int groundGy = groundGyNearestGX(gx);
-        m_propSys.maybeSpawnProp(currentWorldX, groundGy, level_index, m_rng);
+        m_propSys.maybeSpawnProp(currentWorldX, groundGy, level_index, m_slope, m_rng);
 
         m_lastY = newY;
         m_lastX += Constants::STEP;
