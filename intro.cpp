@@ -535,9 +535,30 @@ void IntroScreen::drawFilledTerrain(QPainter& p) {
 
         for (int sGY = startScreenGY; sGY <= gridH(); ++sGY) {
             const int worldGY = sGY - camGY;
-            bool topZone = (sGY < groundWorldGY + camGY + 3*SHADING_BLOCK);
+
+            int depth = sGY - startScreenGY;
+            if (level_index == 5) {
+                QColor c;
+                if (depth < 14) {
+                    if (depth == 0) c = QColor(80, 80, 85);
+                    else if (depth >= 6 && depth <= 7 && (worldGX % 20 < 10)) {
+                        c = QColor(240, 190, 40);
+                    }
+                    else c = QColor(50, 50, 55);
+
+                    plotGridPixel(p, sgx, sGY, c);
+                    continue;
+                }
+            }
+
+            bool topZone = (sGY < groundWorldGY + camGY + 3*SHADING_BLOCK);        
             const QColor shade = grassShadeForBlock(worldGX, worldGY, topZone);
             plotGridPixel(p, sgx, sGY, shade);
+
+            if (level_index != 5) {
+                const QColor edge = grassShadeForBlock(worldGX, groundWorldGY, true).darker(115);
+                plotGridPixel(p, sgx, groundWorldGY + camGY, edge);
+            }
         }
 
         const QColor edge = grassShadeForBlock(worldGX, groundWorldGY, true).darker(115);
