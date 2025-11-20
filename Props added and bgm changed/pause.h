@@ -23,7 +23,7 @@ private:
     int m_count = 3;
     QTimer m_timer;
     QRect m_resumeRectPx;
-    static constexpr int CHAR_ADV = 6;
+    static constexpr int CHAR_ADV = 7;
     inline int gridW() const { return width()  / Constants::PIXEL_SIZE; }
     inline int gridH() const { return height() / Constants::PIXEL_SIZE; }
     int textWidthCells(const QString& s, int scale) const;

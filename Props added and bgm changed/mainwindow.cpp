@@ -101,8 +101,8 @@ void MainWindow::generateInitialTerrain() {
         m_lines.append(seg);
         rasterizeSegmentToHeightMapWorld(seg.getX1(), m_lastY, seg.getX2(), newY);
         int midX = seg.getX1();
-        int groundGy = groundGyNearestGX(midX / Constants::PIXEL_SIZE);
-        m_propSys.maybeSpawnProp(midX, groundGy, level_index, m_rng);
+        int groundGy = groundGyNearestGX(midX / Constants::PIXEL_SIZE); 
+        m_propSys.maybeSpawnProp(currentWorldX, groundGy, level_index, m_slope, m_rng);
 
         m_lastY = newY;
         m_difficulty += Constants::DIFFICULTY_INCREMENT[level_index];
@@ -332,27 +332,17 @@ void MainWindow::paintEvent(QPaintEvent *event) {
         }
         fillPolygon(p, normalisedPoints, Constants::CAR_COLOR);
 
-        for(CarBody* body : m_bodies){
-            auto pts = body->get(-m_cameraX, m_cameraY);
-            QVector<QPoint> normalisedPoints;
-            normalisedPoints.reserve(pts.size());
-            for(auto p2 : pts){
-                normalisedPoints.append(QPoint(p2.x() / Constants::PIXEL_SIZE, p2.y() / Constants::PIXEL_SIZE));
+        auto attach = body->getAttachments(-m_cameraX, m_cameraY);
+        for (const auto& ap : attach) {
+            QVector<QPoint> norm;
+            norm.reserve(ap.first.size());
+            for (const QPoint& q : ap.first) {
+                norm.append(QPoint(q.x() / Constants::PIXEL_SIZE, q.y() / Constants::PIXEL_SIZE));
             }
-            fillPolygon(p, normalisedPoints, Constants::CAR_COLOR);
-
-            auto attach = body->getAttachments(-m_cameraX, m_cameraY);
-            for (const auto& ap : attach) {
-                QVector<QPoint> norm;
-                norm.reserve(ap.first.size());
-                for (const QPoint& q : ap.first) {
-                    norm.append(QPoint(q.x() / Constants::PIXEL_SIZE, q.y() / Constants::PIXEL_SIZE));
-                }
-                fillPolygon(p, norm, ap.second);
-            }
+            fillPolygon(p, norm, ap.second);
         }
     }
-    m_flip.drawWorldPopups(p, m_cameraX, m_cameraY);
+    m_flip.drawWorldPopups(p, m_cameraX, m_cameraY, level_index);
 
     p.restore();
 
@@ -588,7 +578,7 @@ void MainWindow::ensureAheadTerrain(int worldX) {
         
         int gx = currentWorldX / Constants::PIXEL_SIZE;
         int groundGy = groundGyNearestGX(gx);
-        m_propSys.maybeSpawnProp(currentWorldX, groundGy, level_index, m_rng);
+        m_propSys.maybeSpawnProp(currentWorldX, groundGy, level_index, m_slope, m_rng);
 
         m_lastY = newY;
         m_lastX += Constants::STEP;
@@ -755,34 +745,20 @@ void MainWindow::drawHUDFuel(QPainter& p) {
     for (int x=tickEvery; x<wcells; x+=tickEvery)
         plotGridPixel(p, gx+x, gy+barH, QColor(80,80,70));
     const double lowFuelThreshold = Constants::FUEL_MAX * 0.25;
-
     
     const bool isLow = (m_fuel <= lowFuelThreshold);
-
-    
     const bool isFlashingOn = (std::fmod(m_elapsedSeconds, 1.0) < 0.5);
-
     
     if (isLow && isFlashingOn) {
         const QColor red(230, 50, 40);
         const QColor white(255, 255, 255);
-
-        
-        
         const int warningGap = 3; 
         const int warningTopGY = gy + barH + 1 + warningGap;
 
-        
-        
         const int totalWidth = 5 + 2 + 3 + 1 + 3 + 1 + 5;
         int currentGX = (gridW() - totalWidth) / 2;
-
         
-        const int triTopGY = warningTopGY;
-        
-        
-        
-        
+        const int triTopGY = warningTopGY;        
         
         plotGridPixel(p, currentGX + 2, triTopGY,     red);
         plotGridPixel(p, currentGX + 1, triTopGY + 1, red);
@@ -915,7 +891,7 @@ void MainWindow::showGameOver() {
         m_gameOverArmed = false;
         if (m_timer) {
             m_clock.restart();
-            m_timer->start(16);
+            m_timer->start(10);
         }
         setFocus();
     });
@@ -1070,8 +1046,8 @@ void MainWindow::resetGameRound() {
     QColor winC(120,170,220), handleC(20,20,24);
     QVector<QPoint> glassWin{ QPoint(48, 0), QPoint(68, -14), QPoint(105, -14), QPoint(112, -1), QPoint(110, 0) };
     QVector<QPoint> handle  { QPoint(96, 10), QPoint(102, 10), QPoint(102, 13), QPoint(96, 13) };
-    body->addAttachment(glassWin,  winC);
-    body->addAttachment(handle,    handleC);
+    body->addAttachment(glassWin, winC);
+    body->addAttachment(handle, handleC);
     body->finish();
     m_bodies.append(body);
 

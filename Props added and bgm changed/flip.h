@@ -17,12 +17,8 @@ public:
     }
 
     void update(double angleRad, double carX, double carY, double nowSec, const std::function<void(int)>& onAward);
-
-    // HUD: now just "Flips: N" (no icon), aligned with other HUD texts
     void drawHUD(QPainter& p, int levelIndex) const;
-
-    // World popup: "Flip!" over the car after each flip
-    void drawWorldPopups(QPainter& p, int cameraX, int cameraY) const;
+    void drawWorldPopups(QPainter& p, int cameraX, int cameraY, int level_index) const;
 
     int total() const { return m_cw + m_ccw; }
     int cw()    const { return m_cw; }
@@ -35,11 +31,10 @@ private:
     static constexpr int    POPUP_OFFSET_CELLS = 10;
 
     struct Popup {
-        int wx, wy;     // world px
-        double until;   // when to disappear
+        int wx, wy;
+        double until;
     };
 
-    // 5×7 bitmap “Flip!” for popups
     static void drawPixelWordFlip(QPainter& p, int gx, int gy, int cell, const QColor& c);
 
     bool   m_init = false;
