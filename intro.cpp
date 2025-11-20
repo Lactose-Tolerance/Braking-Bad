@@ -551,7 +551,7 @@ void IntroScreen::drawFilledTerrain(QPainter& p) {
                 }
             }
 
-            bool topZone = (sGY < groundWorldGY + camGY + 3*SHADING_BLOCK);        
+            bool topZone = (sGY < groundWorldGY + camGY + 3*SHADING_BLOCK);
             const QColor shade = grassShadeForBlock(worldGX, worldGY, topZone);
             plotGridPixel(p, sgx, sGY, shade);
 
@@ -702,12 +702,10 @@ void IntroScreen::saveUnlocks() const {
 
     QVariantList unlockList;
 
-    // Manually copy each bool into the QVariantList
     for(bool unlocked : levels_unlocked) {
-        unlockList.append(unlocked); // QVariant can store a bool
+        unlockList.append(unlocked);
     }
 
-    // Save the QVariantList
     s.setValue("unlocks", unlockList);
     s.sync();
 }

@@ -135,7 +135,7 @@ void LeaderboardWidget::paintEvent(QPaintEvent* event)
 
 void LeaderboardWidget::keyPressEvent(QKeyEvent* event)
 {
-    if (event->key() == Qt::Key_S || event->key() == Qt::Key_Escape || event->key() == Qt::Key_L) {
+    if (event->key() == Qt::Key_S || event->key() == Qt::Key_Escape) {
         hide();
         emit closed();
         return;
