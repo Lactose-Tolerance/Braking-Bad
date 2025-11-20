@@ -16,11 +16,12 @@ void PropSystem::prune(int minWorldX) {
     m_props.erase(it, m_props.end());
 }
 
-void PropSystem::maybeSpawnProp(int worldX, int groundGy, int levelIndex, std::mt19937& rng) {
+void PropSystem::maybeSpawnProp(int worldX, int groundGy, int levelIndex, float slope, std::mt19937& rng) {
     std::uniform_real_distribution<float> dist(0.0f, 1.0f);
     std::uniform_int_distribution<int> varDist(0, 4);
     std::uniform_int_distribution<int> flipDist(0, 1);
 
+    // Check spacing for existing props
     if (levelIndex >= 2 && !m_props.isEmpty()) {
         if (std::abs(worldX - m_props.last().wx) < 100) {
             return;
@@ -37,7 +38,24 @@ void PropSystem::maybeSpawnProp(int worldX, int groundGy, int levelIndex, std::m
         else if (chance < 0.14f) m_props.append({worldX, wy, PropType::Mushroom,varDist(rng), false});
     }
     else if (levelIndex == 1) {
-        if (chance < 0.06f) {
+        // Desert Level Logic
+
+        // Camel: Rare (0.2%) AND only on relatively flat ground
+        if (chance < 0.02f) {
+            if (std::abs(slope) < 0.15f) { // Flatness check
+                bool camelNearby = false;
+                for(const auto& p : m_props) {
+                    if (p.type == PropType::Camel && std::abs(p.wx - worldX) < 3000) {
+                        camelNearby = true;
+                        break;
+                    }
+                }
+                if (!camelNearby) {
+                    m_props.append({worldX, wy, PropType::Camel, varDist(rng), (bool)flipDist(rng)});
+                }
+            }
+        }
+        else if (chance < 0.06f) {
             m_props.append({worldX, wy, PropType::Cactus, varDist(rng), (bool)flipDist(rng)});
         }
         else if (chance > 0.998f) {
@@ -54,37 +72,39 @@ void PropSystem::maybeSpawnProp(int worldX, int groundGy, int levelIndex, std::m
         }
     }
     else if (levelIndex == 2) {
-        if (chance < 0.003f) {
-            bool iglooNearby = false;
-            for (const auto& p : m_props) {
-                if (p.type == PropType::Igloo && std::abs(p.wx - worldX) < 2500) {
-                    iglooNearby = true;
-                    break;
-                }
-            }
-            if (!iglooNearby) {
-                m_props.append({worldX, wy, PropType::Igloo, varDist(rng), false});
-            }
-        }
-        else if (chance < 0.018f) {
+        // Tundra Level Logic
+
+        // 1. Penguin (Chance: 0.0 to 0.018 = ~1.8%)
+        // Moved FIRST so it doesn't get blocked by the larger Igloo chance
+        if (chance < 0.018f) {
             m_props.append({worldX, wy, PropType::Penguin, varDist(rng), (bool)flipDist(rng)});
         }
-        else if (chance < 0.033f) {
+        // 2. Igloo (Chance: 0.018 to 0.048 = ~3.0%)
+        // Threshold increased to 0.048f so the "window" of opportunity is still exactly 0.03 (3%)
+        else if (chance < 0.048f) {
+            if (std::abs(slope) < 0.15f) { // Flatness check
+                bool iglooNearby = false;
+                for (const auto& p : m_props) {
+                    if (p.type == PropType::Igloo && std::abs(p.wx - worldX) < 2500) {
+                        iglooNearby = true;
+                        break;
+                    }
+                }
+                if (!iglooNearby) {
+                    m_props.append({worldX, wy, PropType::Igloo, varDist(rng), false});
+                }
+            }
+        }
+        // 3. Snowman (Chance: 0.048 to 0.063 = ~1.5%)
+        // Shifted up to accommodate the larger Igloo range
+        else if (chance < 0.063f) {
             m_props.append({worldX, wy, PropType::Snowman, varDist(rng), (bool)flipDist(rng)});
         }
-        else if (chance < 0.058f) {
+        // 4. IceSpike (Chance: 0.063 to 0.088 = ~2.5%)
+        // Shifted up
+        else if (chance < 0.088f) {
             m_props.append({worldX, wy, PropType::IceSpike, varDist(rng), (bool)flipDist(rng)});
         }
-    }
-    else if (levelIndex == 3) {
-        if (chance < 0.01f) {
-            int skyOffset = 180 + (varDist(rng) * 20);
-            m_props.append({worldX, wy - skyOffset, PropType::UFO, varDist(rng), false});
-        }
-    }
-    else if (levelIndex == 4) {
-        if (chance < 0.015f)      m_props.append({worldX, wy, PropType::Rover, varDist(rng), (bool)flipDist(rng)});
-        else if (chance < 0.019f) m_props.append({worldX, wy, PropType::Alien, varDist(rng), false});
     }
 }
 
@@ -98,11 +118,10 @@ void PropSystem::draw(QPainter& p, int camX, int camY, int screenW, int screenH,
         int gx = (prop.wx / Constants::PIXEL_SIZE) - camGX;
         int gy = (prop.wy / Constants::PIXEL_SIZE) + camGY;
 
-        
         int worldGX = prop.wx / Constants::PIXEL_SIZE;
 
         switch (prop.type) {
-        
+
         case PropType::Tree:       drawTree(p, gx, gy, worldGX, prop.wx, prop.wy, prop.variant, heightMap); break;
 
         case PropType::Rock:       drawRock(p, gx, gy, prop.variant); break;
@@ -111,6 +130,8 @@ void PropSystem::draw(QPainter& p, int camX, int camY, int screenW, int screenH,
         case PropType::Cactus:     drawCactus(p, gx, gy, prop.variant); break;
         case PropType::Tumbleweed: drawTumbleweed(p, gx, gy, prop.variant); break;
 
+        case PropType::Camel:      drawCamel(p, gx, gy, prop.variant, prop.flipped); break;
+
         case PropType::Igloo:      drawIgloo(p, gx, gy, worldGX, prop.variant, heightMap); break;
 
         case PropType::Penguin:    drawPenguin(p, gx, gy, prop.variant, prop.flipped); break;
@@ -118,7 +139,6 @@ void PropSystem::draw(QPainter& p, int camX, int camY, int screenW, int screenH,
         case PropType::IceSpike:   drawIceSpike(p, gx, gy, prop.variant); break;
         case PropType::UFO:        drawUFO(p, gx, gy, prop.variant); break;
 
-        
         case PropType::Rover:      drawRover(p, gx, gy, worldGX, prop.variant, prop.flipped, heightMap); break;
 
         case PropType::Alien:      drawAlien(p, gx, gy, prop.variant); break;
@@ -131,9 +151,6 @@ void PropSystem::plot(QPainter& p, int gx, int gy, const QColor& c) {
                Constants::PIXEL_SIZE, Constants::PIXEL_SIZE, c);
 }
 
-
-
-
 void PropSystem::drawTree(QPainter& p, int gx, int gy, int worldGX, int wx, int wy, int variant, const QHash<int,int>& heightMap) {
     QColor cTrunk(184, 115, 51);
     QColor cTrunkDark(100, 50, 20);
@@ -145,14 +162,12 @@ void PropSystem::drawTree(QPainter& p, int gx, int gy, int worldGX, int wx, int 
     int trunkW = 6;
     int trunkH = 30 + (variant * 2);
 
-    
     int centerGroundWorldY = heightMap.value(worldGX, 0);
     int camYOffset = gy - centerGroundWorldY;
 
     int peakScreenY = 999999;
     int halfTrunk = trunkW / 2;
 
-    
     for(int dx = -halfTrunk; dx < halfTrunk; dx++) {
         int wgx = worldGX + dx;
         if(heightMap.contains(wgx)) {
@@ -162,10 +177,8 @@ void PropSystem::drawTree(QPainter& p, int gx, int gy, int worldGX, int wx, int 
     }
     if(peakScreenY == 999999) peakScreenY = gy;
 
-    
     int effectiveBaseY = peakScreenY - 1;
 
-    
     for(int dx = -halfTrunk + 1; dx < halfTrunk; dx++) {
         int wgx = worldGX + dx;
         int groundScreenY = gy;
@@ -178,7 +191,6 @@ void PropSystem::drawTree(QPainter& p, int gx, int gy, int worldGX, int wx, int 
             bool isShadow = (dx == -1 && (effectiveBaseY - y) > 0 && (effectiveBaseY - y) % 3 == 0);
             bool isLight  = (dx == 1  && (effectiveBaseY - y) > 0 && (effectiveBaseY - y) % 4 == 0);
 
-            
             bool isRootFill = (y > effectiveBaseY);
 
             QColor c = cTrunk;
@@ -191,11 +203,9 @@ void PropSystem::drawTree(QPainter& p, int gx, int gy, int worldGX, int wx, int 
         }
     }
 
-    
     plot(p, gx, effectiveBaseY - trunkH/2, cHole);
     plot(p, gx, effectiveBaseY - trunkH/2 - 1, cHole);
 
-    
     int folBot = effectiveBaseY - trunkH + 2;
 
     std::vector<int> rows = {
@@ -245,22 +255,17 @@ void PropSystem::drawTree(QPainter& p, int gx, int gy, int worldGX, int wx, int 
     }
 }
 
-
-
 void PropSystem::drawRover(QPainter& p, int gx, int gy, int worldGX, int variant, bool flipped, const QHash<int,int>& heightMap) {
     int d = flipped ? -1 : 1;
     QColor wheelC(30, 30, 35); QColor chassisC(220, 220, 220);
     QColor detailC(50, 50, 60); QColor lensC(20, 30, 80); QColor gold(200, 170, 50);
-    QColor strutC(40, 40, 50); 
+    QColor strutC(40, 40, 50);
 
-    
-    
     int centerGroundWorldY = heightMap.value(worldGX, 0);
     int camYOffset = gy - centerGroundWorldY;
 
     int peakScreenY = 999999;
 
-    
     for(int dx = -6; dx <= 6; dx++) {
         int wgx = worldGX + dx;
         if(heightMap.contains(wgx)) {
@@ -270,44 +275,33 @@ void PropSystem::drawRover(QPainter& p, int gx, int gy, int worldGX, int variant
     }
     if(peakScreenY == 999999) peakScreenY = gy;
 
-    
-    int chassisBaseY = peakScreenY - 2; 
+    int chassisBaseY = peakScreenY - 2;
 
-    
     auto drawAdaptiveWheel = [&](int offsetX) {
         int wheelWorldGX = worldGX + offsetX;
         int wheelScreenX = gx + offsetX;
 
-        
-        int groundY = peakScreenY + 5; 
+        int groundY = peakScreenY + 5;
         if (heightMap.contains(wheelWorldGX)) {
             groundY = heightMap.value(wheelWorldGX) + camYOffset;
         }
 
-        
         int wheelY = groundY;
 
-        
-        
         for(int y = chassisBaseY; y < wheelY; y++) {
             plot(p, wheelScreenX, y, strutC);
-            plot(p, wheelScreenX + 1, y, strutC); 
+            plot(p, wheelScreenX + 1, y, strutC);
         }
 
-        
         plot(p, wheelScreenX, wheelY, wheelC); plot(p, wheelScreenX+1, wheelY, wheelC);
         plot(p, wheelScreenX, wheelY-1, wheelC); plot(p, wheelScreenX+1, wheelY-1, wheelC);
     };
 
-    
     drawAdaptiveWheel(-5 * d);
     drawAdaptiveWheel(-1 * d);
     drawAdaptiveWheel(5 * d);
 
-    
-    
-    
-    int bodyY = chassisBaseY - 1; 
+    int bodyY = chassisBaseY - 1;
 
     plot(p, gx-(5*d), bodyY, detailC); plot(p, gx-(1*d), bodyY, detailC); plot(p, gx+(5*d), bodyY, detailC);
 
@@ -327,9 +321,6 @@ void PropSystem::drawRover(QPainter& p, int gx, int gy, int worldGX, int variant
     plot(p, dishX-1, bodyY-4, gold); plot(p, dishX, bodyY-4, gold); plot(p, dishX+1, bodyY-4, gold);
     plot(p, dishX-2, bodyY-5, gold); plot(p, dishX+2, bodyY-5, gold);
 }
-
-
-
 
 void PropSystem::drawIgloo(QPainter& p, int gx, int gy, int worldGX, int variant, const QHash<int,int>& heightMap) {
     QColor ice(220, 230, 255);
@@ -395,10 +386,6 @@ void PropSystem::drawIgloo(QPainter& p, int gx, int gy, int worldGX, int variant
     }
 }
 
-
-
-
-
 void PropSystem::drawRock(QPainter& p, int gx, int gy, int variant) {
     QColor c(100, 100, 110);
     QColor highlight(140, 140, 150);
@@ -432,17 +419,44 @@ void PropSystem::drawMushroom(QPainter& p, int gx, int gy, int variant) {
 
 void PropSystem::drawCactus(QPainter& p, int gx, int gy, int variant) {
     QColor c(40, 150, 40);
-    int h = 10 + variant*2;
-    for(int y=0; y<h; y++) plot(p, gx, gy - y, c);
+    int h = 10 + variant * 2;
+
+    // Thicker trunk (3 pixels wide instead of 1)
+    for(int y=0; y<h; y++) {
+        plot(p, gx, gy - y, c);
+        plot(p, gx - 1, gy - y, c);
+        plot(p, gx + 1, gy - y, c);
+    }
+
+    // Cap the top of the trunk
+    plot(p, gx, gy - h, c);
+
+    // Left Arm
     if (variant > 0) {
         int armY = gy - (h/2);
-        plot(p, gx-1, armY, c); plot(p, gx-2, armY, c); plot(p, gx-2, armY-1, c);
-        plot(p, gx-2, armY-2, c);
+        // Horizontal segment (thicker and shifted left due to wider trunk)
+        plot(p, gx-2, armY, c);
+        plot(p, gx-3, armY, c);
+        plot(p, gx-2, armY+1, c);
+        plot(p, gx-3, armY+1, c);
+
+        // Vertical tip
+        plot(p, gx-3, armY-1, c); plot(p, gx-4, armY-1, c);
+        plot(p, gx-3, armY-2, c); plot(p, gx-4, armY-2, c);
     }
+
+    // Right Arm
     if (variant > 2) {
         int armY2 = gy - (h/2) - 2;
-        plot(p, gx+1, armY2, c); plot(p, gx+2, armY2, c); plot(p, gx+2, armY2-1, c);
-        plot(p, gx+2, armY2-2, c);
+        // Horizontal segment (thicker and shifted right due to wider trunk)
+        plot(p, gx+2, armY2, c);
+        plot(p, gx+3, armY2, c);
+        plot(p, gx+2, armY2+1, c);
+        plot(p, gx+3, armY2+1, c);
+
+        // Vertical tip
+        plot(p, gx+3, armY2-1, c); plot(p, gx+4, armY2-1, c);
+        plot(p, gx+3, armY2-2, c); plot(p, gx+4, armY2-2, c);
     }
 }
 
@@ -478,6 +492,70 @@ void PropSystem::drawTumbleweed(QPainter& p, int gx, int gy, int variant) {
             }
         }
     }
+}
+
+void PropSystem::drawCamel(QPainter& p, int gx, int gy, int variant, bool flipped) {
+    int d = flipped ? -1 : 1; // Direction multiplier
+
+    // No rotation logic here, draws strictly horizontally.
+    QColor bodyColor(218, 165, 32); // Goldenrod
+    QColor legColor(139, 69, 19);   // SaddleBrown
+
+    // Legs
+    // Front Left
+    for (int y = 0; y < 8; ++y) plot(p, gx + (4 * d), gy - y, legColor);
+    // Back Left
+    for (int y = 0; y < 8; ++y) plot(p, gx - (6 * d), gy - y, legColor);
+    // Front Right
+    for (int y = 1; y < 8; ++y) plot(p, gx + (3 * d), gy - y, bodyColor);
+    // Back Right
+    for (int y = 1; y < 8; ++y) plot(p, gx - (5 * d), gy - y, bodyColor);
+
+    // Main Body Block
+    for (int x = -7; x <= 5; ++x) {
+        for (int y = 8; y < 14; ++y) {
+            plot(p, gx + (x * d), gy - y, bodyColor);
+        }
+    }
+
+    // Humps
+    bool twoHumps = (variant % 2 == 0);
+    if (twoHumps) {
+        // Back Hump
+        plot(p, gx - (4 * d), gy - 14, bodyColor); plot(p, gx - (3 * d), gy - 14, bodyColor);
+        plot(p, gx - (4 * d), gy - 15, bodyColor); plot(p, gx - (3 * d), gy - 15, bodyColor);
+        // Front Hump
+        plot(p, gx + (1 * d), gy - 14, bodyColor); plot(p, gx + (2 * d), gy - 14, bodyColor);
+        plot(p, gx + (1 * d), gy - 15, bodyColor); plot(p, gx + (2 * d), gy - 15, bodyColor);
+    } else {
+        // Single large hump
+        for(int x = -2; x <= 1; x++) {
+            plot(p, gx + (x * d), gy - 14, bodyColor);
+            plot(p, gx + (x * d), gy - 15, bodyColor);
+        }
+        plot(p, gx - (1 * d), gy - 16, bodyColor); plot(p, gx, gy - 16, bodyColor);
+    }
+
+    // Neck
+    for(int y = 12; y < 18; y++) {
+        plot(p, gx + (6 * d), gy - y, bodyColor);
+        plot(p, gx + (7 * d), gy - y, bodyColor);
+    }
+
+    // Head
+    plot(p, gx + (6 * d), gy - 18, bodyColor); plot(p, gx + (7 * d), gy - 18, bodyColor);
+    plot(p, gx + (8 * d), gy - 18, bodyColor); // Snout
+    plot(p, gx + (6 * d), gy - 19, bodyColor); plot(p, gx + (7 * d), gy - 19, bodyColor);
+
+    // Ear
+    plot(p, gx + (5 * d), gy - 19, legColor);
+
+    // Eye
+    plot(p, gx + (7 * d), gy - 19, legColor);
+
+    // Tail
+    plot(p, gx - (8 * d), gy - 10, legColor);
+    plot(p, gx - (8 * d), gy - 9, bodyColor);
 }
 
 void PropSystem::drawPenguin(QPainter& p, int gx, int gy, int variant, bool flipped) {
