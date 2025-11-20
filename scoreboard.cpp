@@ -125,7 +125,7 @@ void LeaderboardWidget::paintEvent(QPaintEvent* event)
     hintFont.setStyleStrategy(QFont::NoAntialias);
     p.setFont(hintFont);
     p.setPen(QColor(170, 170, 190));
-    const QString hint = QStringLiteral("[L] or [Esc] to close");
+    const QString hint = QStringLiteral("[S] or [Esc] to close");
     QFontMetrics hfm(hintFont);
     int hw = hfm.horizontalAdvance(hint);
     int hx = panel.center().x() - hw / 2;
