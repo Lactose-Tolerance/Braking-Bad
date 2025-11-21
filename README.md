@@ -56,9 +56,9 @@ Navigate treacherous terrains, manage your fuel, perform aerial stunts for bonus
 
 | Key | Action | Description |
 | :---: | :--- | :--- |
-| **W / Up** | **Nitro** | Accelerate. Uses Fuel. Hold for Nitro Boost (when charged). |
-| **D / Right** | **Accelerate / Pitch Up** | Moves car forwards and rotates car counter-clockwise in air. |
-| **A / Left** | **Decelerate / Pitch Down** | Moves car backwards and rotates car counter-clockwise in air. |
+| **W / Up** | **Gas / Nitro** | Accelerate. Uses Fuel. Hold for Nitro Boost (when charged). |
+| **D / Right** | **Pitch Forward** | Rotates car clockwise in air. |
+| **A / Left** | **Pitch Backward** | Rotates car counter-clockwise (Brake on ground). |
 | **P** | **Pause** | Freezes game state. |
 | **S** | **Scoreboard** | View local high scores. |
 | **ESC** | **Exit** | Close the game. |
@@ -96,10 +96,10 @@ Navigate treacherous terrains, manage your fuel, perform aerial stunts for bonus
 
 ## 👨‍💻 Author
 
-**Shinjan Roy**
-**Souradeep De**
-**Arko Dasgupta**
-**Arjeesh Palai**
+**[Shinjan Roy](https://github.com/Lactose-Tolerance)**
+**[Souradeep De](https://github.com/souradeepde05)**
+**[Arko Dasgupta](https://github.com/arkodasgupta0412)**
+**[Arjeesh Palai](https://github.com/shadowbeast0)**
 * Computer Science & Engineering, Jadavpur University (2027)
 
 ---
